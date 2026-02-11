@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canoe & Cuisine - Home</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#D32F2F',
+                            yellow: '#FFC107',
+                            cream: '#FFF8E1',
+                        }
+                    },
+                    fontFamily: {
+                        logo: ['Pacifico', 'cursive'],
+                        body: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .food-card {
+            transition: all 0.3s ease;
+        }
+
+        .food-card:hover:not(.unavailable) {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(211, 47, 47, 0.15);
+        }
+
+        .food-card.unavailable {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        /* Custom scrollbar for Swiggy-like feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FFC107;
+            border-radius: 10px;
+        }
+
+        .active-nav {
+            background-color: #D32F2F;
+            color: white;
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2);
+        }
+
+        .sync-indicator {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast {
+            animation: slideInToast 0.3s ease-out;
+        }
+
+        @keyframes slideInToast {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-body min-h-screen">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        
+        <!-- SIDEBAR (Matches "Book Slot" Sketch) -->
+        <aside class="w-full md:w-64 bg-white border-r border-gray-100 flex flex-col p-6 sticky top-0 h-auto md:h-screen z-40">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="bg-brand-red p-2 rounded-lg">
+                    <i data-lucide="utensils-crossed" class="text-white w-6 h-6"></i>
+                </div>
+                <h1 class="font-logo text-2xl text-brand-red">C&C</h1>
+            </div>
+
+            <nav class="flex-1 space-y-2">
+                <a href="#" class="active-nav flex items-center gap-4 p-3 rounded-xl transition-all duration-300">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                    <span class="font-semibold">Today's Menu</span>
+                </a>
+                
+                <!-- Book Slot Section from your sketch -->
+                <button onclick="openBookingModal()" class="w-full flex items-center gap-4 p-3 text-gray-500 hover:bg-brand-cream hover:text-brand-red rounded-xl transition-all group">
+                    <div class="p-1 rounded bg-gray-100 group-hover:bg-brand-yellow/20">
+                        <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                    </div>
+                    <span class="font-semibold">Book Slot</span>
+                </button>
+
+                <button onclick="window.location.href='my_orders.html'" class="w-full flex items-center gap-4 p-3 text-gray-500 hover:bg-brand-cream hover:text-brand-red rounded-xl transition-all group">
+                    <i data-lucide="history" class="w-5 h-5"></i>
+                    <span class="font-semibold">My Orders</span>
+                </button>
+            </nav>
+
+            <!-- User Profile Section -->
+            <div class="mt-auto pt-6 border-t border-gray-100">
+                <div class="flex items-center gap-3 p-2 bg-brand-cream/50 rounded-2xl mb-4">
+                    <div class="w-10 h-10 rounded-full bg-brand-yellow flex items-center justify-center border-2 border-white shadow-sm">
+                        <span class="text-brand-red font-bold">V</span>
+                    </div>
+                    <div class="overflow-hidden">
+                        <p class="text-xs font-bold text-gray-800 truncate">Vishnu Student</p>
+                        <p class="text-[10px] text-gray-500 truncate">24PA1A05D7...</p>
+                    </div>
+                </div>
+                <button onclick="window.location.href='index.html'" class="w-full flex items-center justify-center gap-2 py-2 text-xs font-bold text-brand-red hover:bg-red-50 rounded-lg transition">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col">
+            
+            <!-- TOP NAVBAR (Swiggy/Zomato Style) -->
+            <header class="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 md:px-10 flex items-center justify-between sticky top-0 z-30">
+                <div class="flex-1 max-w-xl relative group">
+                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-brand-red transition-colors"></i>
+                    <input type="text" placeholder="Search for Biryani, Dosa or Juices..." 
+                           class="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-brand-yellow transition-all outline-none text-sm">
+                </div>
+                
+                <div class="flex items-center gap-4 ml-4">
+                    <button onclick="openCartModal()" class="relative p-3 bg-gray-50 rounded-xl hover:bg-brand-cream transition group">
+                        <i data-lucide="shopping-cart" class="w-5 h-5 text-gray-600 group-hover:text-brand-red"></i>
+                        <span id="cart-count" class="absolute top-2 right-2 w-4 h-4 bg-brand-red text-white text-[10px] flex items-center justify-center rounded-full font-bold border-2 border-white">0</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- MENU SECTION -->
+            <section class="flex-1 overflow-y-auto p-6 md:p-10">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Filter Section -->
+                    <div class="mb-8 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Today's Menu</h2>
+                            <p class="text-gray-500 mt-2">Fresh prepared dishes served with love</p>
+                        </div>
+                    </div>
+
+                    <!-- FOOD GRID -->
+                    <div id="food-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <!-- Food items will be populated here by JS -->
+                    </div>
+
+                    <!-- EMPTY STATE -->
+                    <div id="empty-state" class="hidden text-center py-12">
+                        <div class="text-6xl mb-4">🍽️</div>
+                        <p class="text-gray-400 text-lg">No dishes available right now. Check back later!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CART MODAL -->
+            <div id="cart-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-end md:items-center justify-end md:justify-center p-4">
+                <div class="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-3xl overflow-hidden shadow-2xl slide-in flex flex-col h-screen md:h-auto max-h-screen md:max-h-[90vh]">
+                    <div class="bg-brand-red p-6 text-white flex justify-between items-center sticky top-0 z-10">
+                        <h3 class="text-xl font-bold">Your Cart</h3>
+                        <button onclick="closeCartModal()"><i data-lucide="x" class="w-6 h-6"></i></button>
+                    </div>
+                    
+                    <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <!-- Cart items will be populated here -->
+                    </div>
+
+                    <div id="empty-cart-message" class="hidden flex flex-col items-center justify-center py-12">
+                        <div class="text-5xl mb-2">🛒</div>
+                        <p class="text-gray-400 text-center">Your cart is empty. Add some delicious items!</p>
+                    </div>
+
+                    <div id="cart-footer" class="hidden border-t border-gray-200 p-6 space-y-4">
+                        <div class="flex justify-between items-center text-lg font-bold">
+                            <span>Total:</span>
+                            <span class="text-brand-red">₹<span id="total-price">0</span></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div id="booking-status" class="text-sm text-gray-600">No slot booked</div>
+                            <button onclick="openBookingModal()" class="text-sm font-semibold text-brand-red">Book Slot</button>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-3">Payment Method</label>
+                            <div class="space-y-2">
+                                <button onclick="selectPaymentMethod('card')" class="w-full p-3 border-2 border-gray-200 rounded-lg text-left font-semibold hover:border-brand-red transition payment-method" data-method="card">
+                                    <div class="flex items-center gap-3">
+                                        <i data-lucide="credit-card" class="w-5 h-5"></i>
+                                        <span>Credit/Debit Card</span>
+                                    </div>
+                                </button>
+                                <button onclick="selectPaymentMethod('upi')" class="w-full p-3 border-2 border-gray-200 rounded-lg text-left font-semibold hover:border-brand-red transition payment-method" data-method="upi">
+                                    <div class="flex items-center gap-3">
+                                        <i data-lucide="smartphone" class="w-5 h-5"></i>
+                                        <span>UPI (Google Pay, PhonePe)</span>
+                                    </div>
+                                </button>
+                                <button onclick="selectPaymentMethod('cash')" class="w-full p-3 border-2 border-gray-200 rounded-lg text-left font-semibold hover:border-brand-red transition payment-method" data-method="cash">
+                                    <div class="flex items-center gap-3">
+                                        <i data-lucide="banknote" class="w-5 h-5"></i>
+                                        <span>Cash on Pickup</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button id="proceed-payment-btn" onclick="proceedToPayment()" disabled class="w-full bg-gray-300 text-gray-500 font-bold py-3 rounded-2xl shadow-lg transition cursor-not-allowed">
+                            Select Payment Method
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT POPUP MODAL -->
+    <div id="payment-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl">
+            <div class="bg-brand-red p-6 text-white flex justify-between items-center">
+                <h3 class="text-xl font-bold">Secure Payment</h3>
+                <button onclick="closePaymentModal()"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            
+            <div class="p-8 space-y-6">
+                <div class="text-center">
+                    <div class="text-5xl mb-4">💳</div>
+                    <p class="text-gray-600 font-semibold">Amount to Pay</p>
+                    <p class="text-4xl font-bold text-brand-red mt-2">₹<span id="payment-amount">0</span></p>
+                </div>
+
+                <div id="payment-processing" class="hidden text-center">
+                    <div class="animate-spin inline-block">
+                        <i data-lucide="loader-2" class="w-12 h-12 text-brand-red"></i>
+                    </div>
+                    <p class="mt-4 text-gray-600 font-semibold">Processing Payment...</p>
+                </div>
+
+                <div id="payment-success" class="hidden text-center">
+                    <div class="text-6xl mb-4 animate-bounce">✓</div>
+                    <p class="text-2xl font-bold text-green-600">Payment Successful!</p>
+                    <p class="text-gray-500 mt-2 text-sm">Your order has been placed and sent to the kitchen</p>
+                </div>
+
+                <button id="pay-btn" onclick="simulatePayment()" class="w-full bg-brand-red text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-red-700 transition">
+                    Pay ₹<span id="pay-btn-amount">0</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOKING MODAL -->
+    <div id="booking-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-end md:items-center justify-end md:justify-center p-4">
+        <div class="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-3xl overflow-hidden shadow-2xl slide-in">
+            <div class="bg-brand-red p-6 text-white flex justify-between items-center">
+                <h3 class="text-xl font-bold">Book Your Slot</h3>
+                <button onclick="closeBookingModal()"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-4">Number of People</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="selectBookingPeople(1, this)" id="people-1" class="p-3 border-2 border-gray-200 rounded-xl font-bold text-sm hover:border-brand-red transition">1</button>
+                        <button onclick="selectBookingPeople(2, this)" id="people-2" class="p-3 border-2 border-gray-200 rounded-xl font-bold text-sm hover:border-brand-red transition">2</button>
+                        <button onclick="selectBookingPeople(4, this)" id="people-4" class="p-3 border-2 border-gray-200 rounded-xl font-bold text-sm hover:border-brand-red transition">4</button>
+                        <button onclick="selectBookingPeople(6, this)" id="people-6" class="p-3 border-2 border-gray-200 rounded-xl font-bold text-sm hover:border-brand-red transition">6</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-3">Select Time Slot</label>
+                    <select id="booking-time-select" class="w-full p-3 border-2 border-gray-200 rounded-xl font-semibold focus:border-brand-red focus:outline-none">
+                        <option value="">Choose a time...</option>
+                        <option value="12:00 PM">12:00 PM</option>
+                        <option value="12:30 PM">12:30 PM</option>
+                        <option value="1:00 PM">1:00 PM</option>
+                        <option value="1:30 PM">1:30 PM</option>
+                        <option value="2:00 PM">2:00 PM</option>
+                        <option value="6:00 PM">6:00 PM</option>
+                        <option value="6:30 PM">6:30 PM</option>
+                        <option value="7:00 PM">7:00 PM</option>
+                        <option value="7:30 PM">7:30 PM</option>
+                        <option value="8:00 PM">8:00 PM</option>
+                    </select>
+                </div>
+
+                <button onclick="confirmBooking()" class="w-full bg-brand-red text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-red-700 transition">
+                    Confirm Booking
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MY ORDERS MODAL -->
+     <a href="my_orders.html">
+    <div id="my-orders-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-end md:items-center justify-end md:justify-center p-4">
+        <div class="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-3xl overflow-hidden shadow-2xl slide-in flex flex-col h-screen md:h-auto max-h-screen md:max-h-[90vh]">
+            <div class="bg-brand-red p-6 text-white flex justify-between items-center sticky top-0 z-10">
+                <h3 class="text-xl font-bold">My Orders</h3>
+                <button onclick="closeMyOrdersModal()"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            
+            <div id="orders-list-container" class="flex-1 overflow-y-auto p-6 space-y-4">
+                <!-- Orders will be loaded here -->
+            </div>
+
+            <div id="no-orders-msg" class="hidden flex flex-col items-center justify-center py-12">
+                <div class="text-5xl mb-2">📭</div>
+                <p class="text-gray-400 text-center">No orders yet. Start by adding items to your cart!</p>
+            </div>
+        </div>
+    </div>
+</a>
+
+    <!-- TOAST NOTIFICATION -->
+
+    <script>
+        const DB_KEY = 'canoe_cuisine_db';
+        const CART_KEY = 'canoe_cuisine_cart';
+        const ORDERS_KEY = 'canoe_cuisine_orders';
+        const SLOT_KEY = 'canoe_cuisine_booking';
+        
+        // BroadcastChannel for real-time sync with admin page
+        const menuChannel = new BroadcastChannel('cc_menu');
+        const ordersChannel = new BroadcastChannel('cc_orders');
+        
+        // Setup listeners for real-time sync
+        menuChannel.onmessage = (event) => {
+            if (event.data.type === 'menu_updated') {
+                foodDatabase = JSON.parse(JSON.stringify(event.data.menu));
+                renderMenu();
+                showToast('Menu updated!', 'info');
+            }
+        };
+        
+        ordersChannel.onmessage = (event) => {
+            if (event.data.type === 'orders_updated') {
+                // Refresh my orders if modal is open
+                if (!document.getElementById('my-orders-modal').classList.contains('hidden')) {
+                    renderMyOrders();
+                }
+                // Check for newly accepted orders and notify
+                const newOrders = event.data.orders || [];
+                setTimeout(() => {
+                    // This will be handled by the storage event listener as well
+                }, 100);
+            }
+        };
+        
+        let foodDatabase = [];
+        let cart = [];
+        let selectedPaymentMethod = null;
+        let bookingSelection = { people: null, time: null };
+
+        // Initial Seed Data (Used if storage is empty)
+        const initialData = [
+            { id: 1, name: "Chicken Dum Biryani", category: "biryani", price: 250, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=60", available: true, active: true },
+            { id: 2, name: "Paneer Biryani", category: "biryani", price: 200, image: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&auto=format&fit=crop&q=60", available: true, active: true },
+            { id: 3, name: "Pesarattu", category: "breakfast", price: 60, image: "https://images.unsplash.com/photo-1668236543090-d2f89695029c?w=500&auto=format&fit=crop&q=60", available: true, active: true },
+            { id: 4, name: "Idli with Karam Podi", category: "breakfast", price: 40, image: "https://images.unsplash.com/photo-1589301760576-41f4739112d1?w=500&auto=format&fit=crop&q=60", available: true, active: true },
+            { id: 5, name: "Punugulu", category: "snack", price: 50, image: "https://media.istockphoto.com/id/1329241908/photo/punugulu-a-famous-andhra-snack.jpg?s=612x612&w=0&k=20&c=p-bZ2sY1KmjK_u5v3t6rK_fXy7lZ_m8q9r9_sT6y5_w=", available: true, active: true },
+            { id: 6, name: "Mirchi Bajji", category: "snack", price: 40, image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Mirchi_Bajji.jpg/640px-Mirchi_Bajji.jpg", available: true, active: true },
+            { id: 7, name: "Gongura Chicken", category: "biryani", price: 280, image: "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=500&auto=format&fit=crop&q=60", available: true, active: true },
+            { id: 8, name: "Mysore Bonda", category: "snack", price: 45, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=60", available: true, active: true }
+        ];
+
+        function loadMenuData() {
+            const stored = localStorage.getItem(DB_KEY);
+            if (stored) {
+                foodDatabase = JSON.parse(stored);
+            } else {
+                // Initialize with default data if localStorage is empty
+                foodDatabase = JSON.parse(JSON.stringify(initialData));
+                localStorage.setItem(DB_KEY, JSON.stringify(foodDatabase));
+            }
+            renderMenu();
+            loadCart();
+        }
+
+        function loadCart() {
+            const stored = localStorage.getItem(CART_KEY);
+            cart = stored ? JSON.parse(stored) : [];
+            updateCartUI();
+            updateProceedButtonState();
+        }
+
+        function saveCart() {
+            localStorage.setItem(CART_KEY, JSON.stringify(cart));
+            updateCartUI();
+            updateProceedButtonState();
+        }
+
+        function updateCartUI() {
+            const count = cart.length;
+            document.getElementById('cart-count').textContent = count;
+        }
+
+        function addToCart(itemId) {
+            const item = foodDatabase.find(i => i.id === itemId);
+            if (item) {
+                cart.push({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    image: item.image,
+                    category: item.category,
+                    addedAt: new Date().toLocaleTimeString()
+                });
+                saveCart();
+                showToast(`${item.name} added to cart!`);
+            }
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            saveCart();
+            renderCartItems();
+        }
+
+        function openCartModal() {
+            document.getElementById('cart-modal').classList.remove('hidden');
+            renderCartItems();
+        }
+
+        function closeCartModal() {
+            document.getElementById('cart-modal').classList.add('hidden');
+            selectedPaymentMethod = null;
+            document.querySelectorAll('.payment-method').forEach(btn => btn.classList.remove('border-brand-red', 'bg-brand-cream'));
+        }
+
+        function renderCartItems() {
+            const container = document.getElementById('cart-items-container');
+            const footer = document.getElementById('cart-footer');
+            const emptyMsg = document.getElementById('empty-cart-message');
+
+            if (cart.length === 0) {
+                container.innerHTML = '';
+                emptyMsg.classList.remove('hidden');
+                footer.classList.add('hidden');
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+            footer.classList.remove('hidden');
+
+            container.innerHTML = cart.map((item, index) => `
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-4">
+                    <img src="${item.image}" class="w-16 h-16 rounded-lg object-cover" onerror="this.src='https://placehold.co/100?text=Food'">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-800">${item.name}</h4>
+                        <p class="text-xs text-gray-500">${item.category}</p>
+                        <p class="text-sm font-bold text-brand-red mt-1">₹${item.price}</p>
+                    </div>
+                    <button onclick="removeFromCart(${index})" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('total-price').textContent = total;
+            updateProceedButtonState();
+            lucide.createIcons();
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            document.querySelectorAll('.payment-method').forEach(btn => {
+                btn.classList.remove('border-brand-red', 'bg-brand-cream');
+            });
+            document.querySelector(`[data-method="${method}"]`).classList.add('border-brand-red', 'bg-brand-cream');
+            updateProceedButtonState();
+        }
+
+        function proceedToPayment() {
+            const booking = getBooking();
+            if (!booking) {
+                openBookingModal();
+                return;
+            }
+            if (!selectedPaymentMethod) return;
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('payment-amount').textContent = total;
+            document.getElementById('pay-btn-amount').textContent = total;
+            
+            closeCartModal();
+            document.getElementById('payment-modal').classList.remove('hidden');
+            document.getElementById('payment-processing').classList.add('hidden');
+            document.getElementById('payment-success').classList.add('hidden');
+            document.getElementById('pay-btn').classList.remove('hidden');
+        }
+
+        function simulatePayment() {
+            const payBtn = document.getElementById('pay-btn');
+            const processing = document.getElementById('payment-processing');
+            const success = document.getElementById('payment-success');
+
+            payBtn.classList.add('hidden');
+            processing.classList.remove('hidden');
+
+            setTimeout(() => {
+                processing.classList.add('hidden');
+                success.classList.remove('hidden');
+
+                // Save order
+                const order = {
+                    orderId: 'ORD-' + Date.now(),
+                    // store a deep copy of cart so later mutations don't affect saved order
+                    items: JSON.parse(JSON.stringify(cart || [])),
+                    total: cart.reduce((sum, item) => sum + item.price, 0),
+                    paymentMethod: selectedPaymentMethod,
+                    booking: getBooking(),
+                    status: 'pending',
+                    timestamp: new Date().toLocaleString(),
+                    accepted: false
+                };
+
+                let orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+                orders.push(order);
+                localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+
+                // Notify listeners
+                // Update My Orders view in this tab immediately
+                try { renderMyOrders(); } catch (e) {}
+                window.dispatchEvent(new Event('orderPlaced'));
+
+                setTimeout(() => {
+                    closePaymentModal();
+                    cart = [];
+                    saveCart();
+                    selectedPaymentMethod = null;
+                    // Clear booking after placing order
+                    setBooking(null);
+                    showToast('Order placed successfully! Wait for admin confirmation.', 'success');
+                }, 2000);
+            }, 2000);
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 left-4 right-4 md:right-auto md:left-4 md:max-w-sm p-4 rounded-lg shadow-lg toast ${
+                type === 'success' ? 'bg-green-500' : 'bg-brand-red'
+            } text-white font-semibold z-40`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function renderMenu() {
+            const grid = document.getElementById('food-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            // Filter only active items
+            const activeItems = foodDatabase.filter(item => item.active);
+            
+            if (activeItems.length === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            grid.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            grid.innerHTML = '';
+
+            activeItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `food-card bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 ${!item.available ? 'unavailable' : ''}`;
+                card.innerHTML = `
+                    <div class="h-48 bg-brand-cream relative flex items-center justify-center overflow-hidden">
+                        <img src="${item.image}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x300?text=${item.name}'">
+                        ${!item.available ? '<div class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-lg">SOLD OUT</div>' : ''}
+                    </div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="font-bold text-gray-800 text-lg">${item.name}</h3>
+                            <div class="flex items-center gap-1 bg-blue-100 px-2 py-0.5 rounded text-[10px] font-bold text-blue-700">
+                                <span>${item.category}</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 leading-relaxed mb-4">Premium item from Canoe & Cuisine kitchen.</p>
+                        <div class="flex items-center justify-between border-t border-gray-50 pt-4">
+                            <span class="text-xl font-bold text-brand-red">₹${item.price}</span>
+                            <button class="px-6 py-2 bg-brand-yellow text-red-900 rounded-xl font-bold text-xs shadow-sm hover:shadow-md active:scale-95 transition-all add-btn ${!item.available ? 'opacity-50 cursor-not-allowed' : ''}" ${!item.available ? 'disabled' : ''} data-item-id="${item.id}">
+                                ${item.available ? 'ADD' : 'OUT OF STOCK'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            lucide.createIcons();
+            attachAddButtonListeners();
+        }
+
+        function attachAddButtonListeners() {
+            document.querySelectorAll('.add-btn:not([disabled])').forEach(btn => {
+                btn.removeEventListener('click', handleAddClick);
+                btn.addEventListener('click', handleAddClick);
+            });
+        }
+
+        function handleAddClick(event) {
+            const itemId = parseInt(this.dataset.itemId);
+            addToCart(itemId);
+            
+            const originalText = this.innerText;
+            this.innerText = "ADDED!";
+            this.classList.replace('bg-brand-yellow', 'bg-green-500');
+            this.classList.add('text-white');
+            setTimeout(() => {
+                this.innerText = originalText;
+                this.classList.replace('bg-green-500', 'bg-brand-yellow');
+                this.classList.remove('text-white');
+            }, 1500);
+        }
+
+        function filterByVeg() {
+            const btn = document.getElementById('veg-filter');
+            btn.classList.toggle('border-brand-red');
+            btn.classList.toggle('border-gray-200');
+            btn.classList.toggle('text-brand-red');
+            btn.classList.toggle('text-gray-600');
+            renderMenu();
+        }
+
+        // Listen for changes from admin panel in real-time
+        window.addEventListener('storage', function(event) {
+            if (event.key === DB_KEY) {
+                foodDatabase = JSON.parse(event.newValue);
+                renderMenu();
+            }
+        });
+
+        // Initial load
+        loadMenuData();
+        lucide.createIcons();
+        updateBookingStatus();
+
+        function openBookingModal() {
+            const booking = getBooking();
+            if (booking) {
+                bookingSelection.people = booking.people;
+                const select = document.getElementById('booking-time-select');
+                if (select) select.value = booking.time;
+            }
+            // highlight selected people button
+            ['people-1','people-2','people-4','people-6'].forEach(id => {
+                const b = document.getElementById(id);
+                if (b) b.classList.remove('bg-brand-yellow','text-red-900','font-bold');
+            });
+            if (bookingSelection.people) {
+                const el = document.getElementById('people-' + bookingSelection.people);
+                if (el) el.classList.add('bg-brand-yellow','text-red-900','font-bold');
+            }
+            document.getElementById('booking-modal').classList.remove('hidden');
+        }
+
+        function closeBookingModal() {
+            document.getElementById('booking-modal').classList.add('hidden');
+        }
+
+        function getBooking() {
+            try {
+                return JSON.parse(localStorage.getItem(SLOT_KEY) || 'null');
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function setBooking(obj) {
+            if (!obj) {
+                localStorage.removeItem(SLOT_KEY);
+            } else {
+                localStorage.setItem(SLOT_KEY, JSON.stringify(obj));
+            }
+            updateBookingStatus();
+            updateProceedButtonState();
+        }
+
+        function selectBookingPeople(count, el) {
+            bookingSelection.people = count;
+            // update button styles
+            ['people-1','people-2','people-4','people-6'].forEach(id => {
+                const b = document.getElementById(id);
+                if (b) b.classList.remove('bg-brand-yellow','text-red-900','font-bold');
+            });
+            if (el) el.classList.add('bg-brand-yellow','text-red-900','font-bold');
+        }
+
+        function confirmBooking() {
+            const select = document.getElementById('booking-time-select');
+            const time = select ? select.value : null;
+            const people = bookingSelection.people || 2;
+            const booking = { people, time, bookedAt: new Date().toLocaleString() };
+            setBooking(booking);
+            closeBookingModal();
+            showToast('Booking confirmed for ' + booking.time, 'success');
+        }
+
+        function updateBookingStatus() {
+            const status = document.getElementById('booking-status');
+            const booking = getBooking();
+            if (!status) return;
+            if (booking) {
+                status.textContent = `${booking.people} people • ${booking.time}`;
+                status.classList.remove('text-gray-600');
+                status.classList.add('text-gray-800','font-semibold');
+            } else {
+                status.textContent = 'No slot booked';
+                status.classList.remove('text-gray-800','font-semibold');
+                status.classList.add('text-gray-600');
+            }
+        }
+
+        function updateProceedButtonState() {
+            const btn = document.getElementById('proceed-payment-btn');
+            const booking = getBooking();
+            if (selectedPaymentMethod && booking && cart.length > 0) {
+                btn.disabled = false;
+                btn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                btn.classList.add('bg-brand-red', 'text-white', 'hover:bg-red-700');
+                btn.textContent = 'Proceed to Payment';
+            } else if (!booking) {
+                btn.disabled = true;
+                btn.classList.remove('bg-brand-red', 'text-white', 'hover:bg-red-700');
+                btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                btn.textContent = 'Book a slot to proceed';
+            } else if (!selectedPaymentMethod) {
+                btn.disabled = true;
+                btn.classList.remove('bg-brand-red', 'text-white', 'hover:bg-red-700');
+                btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                btn.textContent = 'Select Payment Method';
+            }
+        }
+
+        function openMyOrdersModal() {
+            document.getElementById('my-orders-modal').classList.remove('hidden');
+            renderMyOrders();
+        }
+
+        function closeMyOrdersModal() {
+            document.getElementById('my-orders-modal').classList.add('hidden');
+        }
+
+        function renderMyOrders() {
+            let orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+            const container = document.getElementById('orders-list-container');
+            const noMsg = document.getElementById('no-orders-msg');
+
+            if (orders.length === 0) {
+                container.innerHTML = '';
+                noMsg.classList.remove('hidden');
+                return;
+            }
+
+            noMsg.classList.add('hidden');
+            container.innerHTML = '';
+
+            // Sort orders by most recent first
+            orders = orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            orders.forEach((order, index) => {
+                const div = document.createElement('div');
+                const isAccepted = order.accepted;
+                const statusColor = isAccepted ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                const statusText = isAccepted ? '✓ Accepted' : '⏳ Pending';
+                const statusBg = isAccepted ? 'bg-green-500' : 'bg-yellow-500';
+
+                div.className = `border-l-4 ${isAccepted ? 'border-green-500' : 'border-yellow-500'} bg-white rounded-lg p-4 transition-all ${isAccepted ? 'ring-2 ring-green-200' : ''}`;
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="font-bold text-gray-800 text-sm">${order.orderId}</p>
+                            <p class="text-xs text-gray-500">${order.timestamp}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColor}">
+                            ${statusText}
+                        </span>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-3 mb-3 max-h-48 overflow-y-auto">
+                        <div class="text-xs font-bold text-gray-600 mb-3 uppercase tracking-wide">Ordered Items:</div>
+                        ${(() => {
+                            let itemsList = [];
+                            try {
+                                if (Array.isArray(order.items) && order.items.length > 0) {
+                                    if (order.items[0] && order.items[0].name) {
+                                        // Items are stored as full objects
+                                        itemsList = order.items;
+                                    } else {
+                                        // Items are stored as IDs, need to resolve them
+                                        itemsList = order.items.map(id => {
+                                            const found = foodDatabase.find(f => f.id == id);
+                                            return found ? { name: found.name, price: found.price, image: found.image } : { name: 'Unknown Item', price: 0 };
+                                        });
+                                    }
+                                }
+                            } catch (e) { 
+                                console.error('Error parsing order items:', e);
+                                itemsList = []; 
+                            }
+                            
+                            if (itemsList.length === 0) {
+                                return '<div class="text-xs text-gray-500 italic py-2">No items found in this order.</div>';
+                            }
+                            
+                            return itemsList.map(item => `
+                                <div class="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
+                                    <div class="flex items-center gap-2 flex-1">
+                                        ${item.image ? `<img src="${item.image}" class="w-8 h-8 rounded object-cover" onerror="this.style.display='none'">` : ''}
+                                        <span class="text-sm text-gray-700 font-medium">${item.name || 'Unknown Item'}</span>
+                                    </div>
+                                    <span class="font-semibold text-brand-red text-sm">₹${item.price || 0}</span>
+                                </div>
+                            `).join('');
+                        })()}
+                    </div>
+
+                    ${order.booking ? `
+                        <div class="mb-3 p-3 bg-blue-50 rounded text-sm text-blue-700">
+                            <div class="font-bold text-blue-800">Booking:</div>
+                            <div class="text-xs">${order.booking.people} people • ${order.booking.time}</div>
+                        </div>
+                    ` : ''}
+
+                    <div class="flex justify-between items-center">
+                        <div class="font-bold text-gray-800">
+                            Total: <span class="text-brand-red">₹${order.total}</span>
+                        </div>
+                        <span class="text-xs font-semibold px-2 py-1 rounded bg-gray-100 text-gray-700">${order.paymentMethod.toUpperCase()}</span>
+                    </div>
+
+                    ${isAccepted ? `
+                        <div class="mt-3 p-2 bg-green-50 rounded text-xs text-green-700 font-semibold text-center animate-bounce">
+                            🎉 Your order has been accepted by admin!
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(div);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Listen for order status updates from admin panel in real-time
+        window.addEventListener('storage', function(event) {
+            if (event.key === ORDERS_KEY) {
+                const newOrders = JSON.parse(event.newValue || '[]');
+                const oldOrders = JSON.parse(event.oldValue || '[]');
+                
+                // Check if any order was accepted
+                newOrders.forEach(newOrder => {
+                    const oldOrder = oldOrders.find(o => o.orderId === newOrder.orderId);
+                    if (oldOrder && !oldOrder.accepted && newOrder.accepted) {
+                        showToast(`Order ${newOrder.orderId} accepted by admin! 🎉`, 'success');
+                    }
+                });
+                
+                // Refresh my orders if modal is open
+                if (!document.getElementById('my-orders-modal').classList.contains('hidden')) {
+                    renderMyOrders();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

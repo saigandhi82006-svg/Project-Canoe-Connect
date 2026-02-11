@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canoe & Cuisine - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#D32F2F',    
+                            yellow: '#FFC107', 
+                            cream: '#FFF8E1',  
+                            dark: '#1a1a1a',
+                        }
+                    },
+                    fontFamily: {
+                        logo: ['Pacifico', 'cursive'],
+                        body: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #FFF8E1; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #FFC107; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #D32F2F; }
+        .nav-item.active { background-color: #FFC107; color: #D32F2F; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .food-card { transition: all 0.3s ease; }
+        .food-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .toggle-checkbox:checked { right: 0; border-color: #10B981; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #10B981; }
+        .price-input:disabled { background-color: transparent; border-color: transparent; }
+    </style>
+</head>
+<body class="font-body text-gray-800 antialiased h-screen flex overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-brand-red text-white flex flex-col shadow-2xl z-20 hidden md:flex">
+        <div class="p-6 border-b border-white/10">
+            <div class="flex items-center gap-2 text-white mb-2">
+                <i data-lucide="utensils-crossed" class="w-6 h-6"></i>
+                <span class="text-xs font-bold tracking-widest uppercase opacity-75">Admin Panel</span>
+            </div>
+            <h1 class="font-logo text-2xl">Canoe <span class="text-brand-yellow">&</span> Cuisine</h1>
+        </div>
+        <nav class="flex-1 py-6 px-3 space-y-2">
+            <button onclick="router('add')" id="nav-add" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/10 text-left">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i> <span>Add Items</span>
+            </button>
+            <button onclick="router('remove')" id="nav-remove" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/10 text-left">
+                <i data-lucide="trash-2" class="w-5 h-5"></i> <span>Remove Items</span>
+            </button>
+            <button onclick="router('price')" id="nav-price" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/10 text-left">
+                <i data-lucide="indian-rupee" class="w-5 h-5"></i> <span>Price Changing</span>
+            </button>
+            <button onclick="router('availability')" id="nav-availability" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/10 text-left">
+                <i data-lucide="toggle-left" class="w-5 h-5"></i> <span>Availability</span>
+            </button>
+            <button onclick="window.location.href='new_orders.html'" id="nav-orders" class="nav-item relative w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/10 text-left">
+                <i data-lucide="package" class="w-5 h-5"></i> <span>New Orders</span>
+                <span id="order-notification" class="hidden ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">0</span>
+            </button>
+            <!-- RESET BUTTON FOR DEMO PURPOSES -->
+            <button onclick="resetSystem()" class="mt-8 text-xs text-white/50 hover:text-white w-full text-center">Reset System Data</button>
+        </nav>
+        <div class="p-4 border-t border-white/10">
+            <div class="flex items-center gap-3 p-2 rounded-lg bg-black/20">
+                <div class="w-10 h-10 rounded-full bg-brand-yellow flex items-center justify-center text-brand-red font-bold">A</div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold truncate">Admin User</p>
+                    <p class="text-xs opacity-75">Mess Manager</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MOBILE HEADER -->
+    <div class="md:hidden fixed top-0 w-full bg-brand-red text-white z-50 p-4 flex justify-between items-center shadow-lg">
+        <h1 class="font-logo text-xl">Canoe & Cuisine</h1>
+        <button onclick="toggleMobileMenu()" class="p-2"><i data-lucide="menu" class="w-6 h-6"></i></button>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <main id="main-container" class="flex-1 relative overflow-y-auto h-full pt-16 md:pt-0">
+        <!-- Content gets injected here by JS -->
+    </main>
+
+    <!-- TEMPLATES -->
+    <template id="view-add">
+        <div class="p-8 max-w-6xl mx-auto">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">Add Items to Menu</h2>
+                <p class="text-gray-500">Select items to display on the User Home Panel.</p>
+            </header>
+            <div class="flex gap-4 mb-8 overflow-x-auto pb-2">
+                <button onclick="filterAddView('all')" class="cat-btn active px-6 py-2 rounded-full bg-brand-red text-white font-semibold shadow-md whitespace-nowrap">All</button>
+                <button onclick="filterAddView('biryani')" class="cat-btn px-6 py-2 rounded-full bg-white text-gray-600 font-semibold shadow-sm hover:bg-gray-50 whitespace-nowrap">Biryanis</button>
+                <button onclick="filterAddView('snack')" class="cat-btn px-6 py-2 rounded-full bg-white text-gray-600 font-semibold shadow-sm hover:bg-gray-50 whitespace-nowrap">Andhra Snacks</button>
+                <button onclick="filterAddView('breakfast')" class="cat-btn px-6 py-2 rounded-full bg-white text-gray-600 font-semibold shadow-sm hover:bg-gray-50 whitespace-nowrap">Breakfasts</button>
+            </div>
+            <div id="add-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        </div>
+    </template>
+
+    <template id="view-remove">
+        <div class="p-8 max-w-6xl mx-auto">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">Remove Items</h2>
+                <p class="text-gray-500">Manage items currently visible to users.</p>
+            </header>
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-brand-cream/30">
+                    <h3 class="font-bold text-lg text-brand-red">Active Menu Items</h3>
+                    <span id="active-count" class="bg-brand-yellow text-xs font-bold px-2 py-1 rounded-md text-brand-red">0 Items</span>
+                </div>
+                <div id="remove-list" class="divide-y divide-gray-100"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="view-price">
+        <div class="p-8 max-w-6xl mx-auto">
+            <header class="mb-8 flex justify-between items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">Price Management</h2>
+                    <p class="text-gray-500">Update prices seen by users instantly.</p>
+                </div>
+                <button onclick="toggleEditMode()" id="edit-btn" class="bg-brand-yellow hover:bg-yellow-400 text-brand-red px-6 py-3 rounded-xl font-bold shadow-md flex items-center gap-2 transition-transform transform active:scale-95">
+                    <i data-lucide="pencil" class="w-4 h-4"></i> <span>Edit Prices</span>
+                </button>
+            </header>
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="p-5 text-sm font-semibold text-gray-600 uppercase tracking-wider">Item Name</th>
+                            <th class="p-5 text-sm font-semibold text-gray-600 uppercase tracking-wider">Category</th>
+                            <th class="p-5 text-sm font-semibold text-gray-600 uppercase tracking-wider text-right">Price (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="price-table-body" class="divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <template id="view-availability">
+        <div class="p-8 max-w-6xl mx-auto">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">Item Availability</h2>
+                <p class="text-gray-500">Mark items as 'Sold Out' on the user panel.</p>
+            </header>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="availability-grid"></div>
+        </div>
+    </template>
+
+    <template id="view-orders">
+        <div class="p-8 max-w-6xl mx-auto">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">New Orders</h2>
+                <p class="text-gray-500">View and manage customer orders.</p>
+            </header>
+            <div id="orders-container" class="space-y-4"></div>
+            <div id="no-orders-message" class="hidden text-center py-12">
+                <div class="text-6xl mb-4">📭</div>
+                <p class="text-gray-400 text-lg">No pending orders yet. Waiting for customers...</p>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // --- DATA MANAGEMENT ---
+        const DB_KEY = 'canoe_cuisine_db';
+        const ORDERS_KEY = 'canoe_cuisine_orders';
+        
+        // BroadcastChannel for real-time sync with home page
+        const menuChannel = new BroadcastChannel('cc_menu');
+        const ordersChannel = new BroadcastChannel('cc_orders');
+        
+        // Initial Seed Data (Used if storage is empty)
+        const initialData = [
+            { id: 1, name: "Chicken Dum Biryani", category: "biryani", price: 250, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=60", available: true, active: true },
+            { id: 2, name: "Paneer Biryani", category: "biryani", price: 200, image: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500&auto=format&fit=crop&q=60", available: true, active: true },
+            { id: 3, name: "Pesarattu", category: "breakfast", price: 60, image: "https://images.unsplash.com/photo-1668236543090-d2f89695029c?w=500&auto=format&fit=crop&q=60", available: true, active: true },
+            { id: 4, name: "Idli with Karam Podi", category: "breakfast", price: 40, image: "https://images.unsplash.com/photo-1589301760576-41f4739112d1?w=500&auto=format&fit=crop&q=60", available: true, active: true },
+            { id: 5, name: "Punugulu", category: "snack", price: 50, image: "https://media.istockphoto.com/id/1329241908/photo/punugulu-a-famous-andhra-snack.jpg?s=612x612&w=0&k=20&c=p-bZ2sY1KmjK_u5v3t6rK_fXy7lZ_m8q9r9_sT6y5_w=", available: true, active: true },
+            { id: 6, name: "Mirchi Bajji", category: "snack", price: 40, image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Mirchi_Bajji.jpg/640px-Mirchi_Bajji.jpg", available: true, active: true },
+            { id: 7, name: "Gongura Chicken", category: "biryani", price: 280, image: "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=500&auto=format&fit=crop&q=60", available: true, active: true },
+            { id: 8, name: "Mysore Bonda", category: "snack", price: 45, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=60", available: true, active: true }
+        ];
+
+        let foodDatabase = [];
+        let isEditMode = false;
+        let orders = [];
+
+        function loadData() {
+            const stored = localStorage.getItem(DB_KEY);
+            if (stored) {
+                foodDatabase = JSON.parse(stored);
+            } else {
+                foodDatabase = JSON.parse(JSON.stringify(initialData));
+                saveData();
+            }
+            loadOrders();
+        }
+
+        function saveData() {
+            localStorage.setItem(DB_KEY, JSON.stringify(foodDatabase));
+            // Broadcast menu update to all tabs/windows
+            menuChannel.postMessage({
+                type: 'menu_updated',
+                menu: JSON.parse(JSON.stringify(foodDatabase)),
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        function loadOrders() {
+            orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+            updateOrderNotification();
+        }
+
+        function saveOrders() {
+            localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+            updateOrderNotification();
+            // Broadcast order update to all tabs/windows
+            ordersChannel.postMessage({
+                type: 'orders_updated',
+                orders: JSON.parse(JSON.stringify(orders)),
+                timestamp: new Date().toISOString()
+            });
+            // Notify home page of order update
+            window.dispatchEvent(new Event('ordersUpdated'));
+        }
+
+        function updateOrderNotification() {
+            const pendingOrders = orders.filter(o => !o.accepted).length;
+            const badge = document.getElementById('order-notification');
+            if (pendingOrders > 0) {
+                badge.textContent = pendingOrders;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function resetSystem() {
+            if(confirm("Reset all data to default? This will clear price changes and orders.")) {
+                localStorage.removeItem(DB_KEY);
+                localStorage.removeItem(ORDERS_KEY);
+                location.reload();
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
+        function init() {
+            loadData();
+            lucide.createIcons();
+            router('add');
+            
+            // Listen for new orders from home page
+            window.addEventListener('orderPlaced', loadOrders);
+        }
+
+        function router(viewName) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const activeNav = document.getElementById(`nav-${viewName}`);
+            if(activeNav) activeNav.classList.add('active');
+
+            const main = document.getElementById('main-container');
+            const template = document.getElementById(`view-${viewName}`);
+            main.innerHTML = '';
+            main.appendChild(template.content.cloneNode(true));
+
+            if(viewName === 'add') renderAddItems('all');
+            if(viewName === 'remove') renderRemoveItems();
+            if(viewName === 'price') renderPriceItems();
+            if(viewName === 'availability') renderAvailabilityItems();
+            if(viewName === 'orders') renderOrders();
+            lucide.createIcons();
+        }
+
+        // --- ADD ITEMS LOGIC ---
+        function filterAddView(category) {
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-red', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-600');
+            });
+            event.target.classList.remove('bg-white', 'text-gray-600');
+            event.target.classList.add('bg-brand-red', 'text-white');
+            renderAddItems(category);
+        }
+
+        function renderAddItems(category) {
+            const grid = document.getElementById('add-grid');
+            grid.innerHTML = '';
+            const items = category === 'all' ? foodDatabase : foodDatabase.filter(i => i.category === category);
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `food-card bg-white rounded-2xl shadow-md overflow-hidden border-2 ${item.active ? 'border-green-500 ring-2 ring-green-100' : 'border-transparent'}`;
+                card.innerHTML = `
+                    <div class="h-40 bg-gray-200 relative">
+                        <img src="${item.image}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x300?text=Food'">
+                        ${item.active ? '<div class="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full shadow-lg"><i data-lucide="check" class="w-4 h-4"></i></div>' : ''}
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-gray-800 leading-tight">${item.name}</h3>
+                            <span class="font-bold text-brand-red">₹${item.price}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide mb-4">${item.category}</p>
+                        <button onclick="toggleActive(${item.id})" class="w-full py-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${item.active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-brand-yellow text-brand-red hover:bg-yellow-400'}">
+                            ${item.active ? 'Remove from Menu' : 'Add to Menu'}
+                        </button>
+                    </div>`;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function toggleActive(id) {
+            const item = foodDatabase.find(i => i.id === id);
+            if(item) {
+                item.active = !item.active;
+                saveData();
+                
+                // Re-render current view with current filter
+                const activeBtn = document.querySelector('.cat-btn.bg-brand-red');
+                const filter = activeBtn ? activeBtn.innerText.toLowerCase() : 'all';
+                const mappedFilter = filter.includes('biryani') ? 'biryani' : filter.includes('snack') ? 'snack' : filter.includes('breakfast') ? 'breakfast' : 'all';
+                renderAddItems(mappedFilter);
+            }
+        }
+
+        // --- REMOVE ITEMS LOGIC ---
+        function renderRemoveItems() {
+            const list = document.getElementById('remove-list');
+            const activeItems = foodDatabase.filter(i => i.active);
+            document.getElementById('active-count').innerText = `${activeItems.length} Items`;
+            list.innerHTML = '';
+
+            if (activeItems.length === 0) {
+                list.innerHTML = `<div class="p-8 text-center text-gray-400 italic">No items currently in the menu.</div>`;
+                return;
+            }
+
+            activeItems.forEach(item => {
+                const row = document.createElement('div');
+                row.className = "p-4 flex items-center justify-between hover:bg-red-50 transition-colors group";
+                row.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover bg-gray-200" onerror="this.src='https://placehold.co/100?text=F'">
+                        <div><h4 class="font-bold text-gray-800">${item.name}</h4><p class="text-xs text-gray-500">₹${item.price} • ${item.category}</p></div>
+                    </div>
+                    <button onclick="toggleActive(${item.id}); renderRemoveItems()" class="p-2 bg-white border border-gray-200 rounded-full text-gray-400 hover:text-brand-red hover:bg-red-50 transition shadow-sm"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                `;
+                list.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        // --- PRICE LOGIC ---
+        function renderPriceItems() {
+            const tbody = document.getElementById('price-table-body');
+            tbody.innerHTML = '';
+            foodDatabase.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-5 font-bold text-gray-800">${item.name}</td>
+                    <td class="p-5"><span class="bg-brand-cream text-brand-red px-3 py-1 rounded-full text-xs font-bold uppercase">${item.category}</span></td>
+                    <td class="p-5 text-right"><div class="flex items-center justify-end gap-2"><span class="text-gray-400 font-bold">₹</span><input type="number" id="price-${item.id}" value="${item.price}" disabled class="price-input w-24 p-2 rounded-lg border-2 border-transparent text-right font-bold text-gray-800 focus:outline-none focus:border-brand-yellow bg-transparent"></div></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('edit-btn');
+            const inputs = document.querySelectorAll('.price-input');
+            
+            if (isEditMode) {
+                btn.innerHTML = `<i data-lucide="save" class="w-4 h-4 mr-2"></i> Save Changes`;
+                btn.classList.replace('bg-brand-yellow', 'bg-green-500');
+                btn.classList.replace('text-brand-red', 'text-white');
+                inputs.forEach(inp => { inp.disabled = false; inp.classList.replace('bg-transparent', 'bg-white'); inp.classList.replace('border-transparent', 'border-gray-200'); });
+            } else {
+                btn.innerHTML = `<i data-lucide="pencil" class="w-4 h-4 mr-2"></i> Edit Prices`;
+                btn.classList.replace('bg-green-500', 'bg-brand-yellow');
+                btn.classList.replace('text-white', 'text-brand-red');
+                inputs.forEach(inp => {
+                    const id = parseInt(inp.id.split('-')[1]);
+                    const item = foodDatabase.find(i => i.id === id);
+                    if(item) item.price = parseInt(inp.value);
+                    inp.disabled = true;
+                    inp.classList.replace('bg-white', 'bg-transparent');
+                    inp.classList.replace('border-gray-200', 'border-transparent');
+                });
+                saveData();
+                showNotification("Prices updated and synced to Home Panel!");
+            }
+            lucide.createIcons();
+        }
+
+        // --- AVAILABILITY LOGIC ---
+        function renderAvailabilityItems() {
+            const grid = document.getElementById('availability-grid');
+            grid.innerHTML = '';
+            foodDatabase.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between";
+                div.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full overflow-hidden border-2 ${item.available ? 'border-green-500' : 'border-gray-300'}"><img src="${item.image}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100?text=F'"></div>
+                        <div><h4 class="font-bold text-gray-800">${item.name}</h4><p class="text-xs ${item.available ? 'text-green-600' : 'text-red-500'} font-bold uppercase status-text-${item.id}">${item.available ? 'In Stock' : 'Unavailable'}</p></div>
+                    </div>
+                    <div class="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in"><input type="checkbox" id="toggle-${item.id}" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-300 appearance-none cursor-pointer transition-all duration-300" ${item.available ? 'checked' : ''} onchange="toggleAvail(${item.id})"/><label for="toggle-${item.id}" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-300"></label></div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function toggleAvail(id) {
+            const item = foodDatabase.find(i => i.id === id);
+            if(item) {
+                item.available = !item.available;
+                saveData();
+                const txt = document.querySelector(`.status-text-${id}`);
+                const img = txt.parentElement.previousElementSibling;
+                if(item.available) {
+                    txt.innerText = "In Stock"; txt.className = `text-xs text-green-600 font-bold uppercase status-text-${id}`;
+                    img.classList.replace('border-gray-300', 'border-green-500');
+                } else {
+                    txt.innerText = "Unavailable"; txt.className = `text-xs text-red-500 font-bold uppercase status-text-${id}`;
+                    img.classList.replace('border-green-500', 'border-gray-300');
+                }
+            }
+        }
+
+        // --- ORDERS LOGIC ---
+        function renderOrders() {
+            loadOrders();
+            const container = document.getElementById('orders-container');
+            const noMsg = document.getElementById('no-orders-message');
+            
+            const pendingOrders = orders.filter(o => !o.accepted);
+            
+            if (pendingOrders.length === 0) {
+                container.innerHTML = '';
+                noMsg.classList.remove('hidden');
+                return;
+            }
+            
+            container.innerHTML = '';
+            noMsg.classList.add('hidden');
+            
+            pendingOrders.forEach((order, index) => {
+                const div = document.createElement('div');
+                div.className = "bg-white rounded-2xl shadow-lg border-l-4 border-brand-red p-6";
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">${order.orderId}</h3>
+                            <p class="text-xs text-gray-500 mt-1">${order.timestamp}</p>
+                        </div>
+                        <span class="bg-brand-yellow text-brand-red px-3 py-1 rounded-full font-bold text-xs">${order.paymentMethod.toUpperCase()}</span>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 max-h-64 overflow-y-auto">
+                        <h4 class="font-bold text-gray-700 mb-3 text-lg">Ordered Items:</h4>
+                        ${(() => {
+                            // Resolve items: support both full item objects or arrays of item IDs
+                            let itemsList = [];
+                            try {
+                                if (Array.isArray(order.items) && order.items.length > 0) {
+                                    if (order.items[0] && order.items[0].name) {
+                                        // Items are stored as full objects with name, price, etc.
+                                        itemsList = order.items;
+                                    } else {
+                                        // Items are stored as IDs, need to resolve them from foodDatabase
+                                        itemsList = order.items.map(id => {
+                                            const found = foodDatabase.find(f => f.id == id);
+                                            return found ? { name: found.name, price: found.price, image: found.image, category: found.category } : { name: 'Unknown Item', price: 0 };
+                                        });
+                                    }
+                                }
+                            } catch (e) { 
+                                console.error('Error parsing order items:', e);
+                                itemsList = []; 
+                            }
+                            
+                            if (itemsList.length === 0) {
+                                return '<div class="text-sm text-gray-500 italic py-2">No items found in this order.</div>';
+                            }
+                            
+                            return itemsList.map(item => `
+                                <div class="flex items-center justify-between py-2.5 border-b border-gray-200 last:border-0 hover:bg-gray-100 rounded px-2 transition-colors">
+                                    <div class="flex items-center gap-3 flex-1">
+                                        ${item.image ? `<img src="${item.image}" class="w-10 h-10 rounded-lg object-cover border border-gray-200" onerror="this.style.display='none'">` : ''}
+                                        <div>
+                                            <span class="text-gray-800 font-semibold block">${item.name || 'Unknown Item'}</span>
+                                            ${item.category ? `<span class="text-xs text-gray-500">${item.category}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <span class="font-bold text-brand-red text-base">₹${item.price || 0}</span>
+                                </div>
+                            `).join('');
+                        })()}
+                    </div>
+                                ${order.booking ? `
+                                <div class="mb-4 p-3 bg-blue-50 rounded text-sm text-blue-700">
+                                    <div class="font-bold text-blue-800 mb-1">Booking</div>
+                                    <div class="text-xs">${order.booking.people} people • ${order.booking.time}</div>
+                                </div>
+                                ` : ''}
+                    
+                    <div class="flex justify-between items-center">
+                        <div class="text-lg font-bold">
+                            Total: <span class="text-brand-red">₹${order.total}</span>
+                        </div>
+                                    <button onclick="acceptOrder('${order.orderId}')" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-bold transition">
+                                        Accept Order
+                                    </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            
+            lucide.createIcons();
+        }
+
+        function acceptOrder(orderId) {
+            const idx = orders.findIndex(o => o.orderId === orderId);
+            if (idx !== -1) {
+                orders[idx].accepted = true;
+                saveOrders();
+                showNotification(`Order ${orders[idx].orderId} accepted! 🎉`, 'success');
+                // Re-render to remove accepted from pending list
+                renderOrders();
+            }
+        }
+
+        // Listen for storage changes (orders placed/updated from other tabs)
+        window.addEventListener('storage', function(event) {
+            if (event.key === ORDERS_KEY) {
+                // Try to detect increase in pending orders to notify admin
+                let oldOrders = [];
+                try {
+                    oldOrders = event.oldValue ? JSON.parse(event.oldValue) : (orders || []);
+                } catch (e) { oldOrders = (orders || []); }
+
+                loadOrders();
+
+                // After loading, `orders` contains the latest set
+                const newOrders = orders || [];
+                const oldPending = Array.isArray(oldOrders) ? oldOrders.filter(o => !o.accepted).length : 0;
+                const newPending = newOrders.filter(o => !o.accepted).length;
+
+                if (newPending > oldPending) {
+                    showNotification('New order received!', 'success');
+                }
+
+                // Re-render orders view if it's open
+                const active = document.querySelector('.nav-item.active');
+                if (active && active.id === 'nav-orders') {
+                    renderOrders();
+                }
+            }
+        });
+
+        function showNotification(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white font-bold z-50 ${
+                type === 'success' ? 'bg-green-500' : 'bg-brand-red'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

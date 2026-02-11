@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canoe & Cuisine - Login & Register</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#D32F2F',    /* Deep Appetizing Red */
+                            yellow: '#FFC107', /* Warm Cheese/Mustard Yellow */
+                            cream: '#FFF8E1',  /* Light Cream background */
+                        }
+                    },
+                    fontFamily: {
+                        logo: ['Pacifico', 'cursive'],
+                        body: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom styles for the specific visual effects */
+        
+        .sketch-border {
+            border: 3px solid #D32F2F;
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            box-shadow: 4px 4px 0px 0px #FFC107;
+            transition: all 0.3s ease;
+        }
+
+        .sketch-border:hover {
+            box-shadow: 2px 2px 0px 0px #FFC107;
+            transform: translateY(2px);
+        }
+
+        .food-bg {
+            background-color: #D32F2F;
+            background-image: radial-gradient(#FFC107 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .view-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s ease-out;
+        }
+        
+        .view-active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom scrollbar for the register form if it gets too long */
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #FFC107;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="food-bg min-h-screen flex items-center justify-center p-4 font-body">
+
+    <!-- Main Card Container -->
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border-4 border-brand-yellow relative">
+        
+        <!-- Decorative corner piece -->
+        <div class="absolute top-0 right-0 w-16 h-16 bg-brand-yellow rounded-bl-full opacity-50 z-0"></div>
+        <div class="absolute bottom-0 left-0 w-12 h-12 bg-brand-red rounded-tr-full opacity-20 z-0"></div>
+
+        <div class="p-6 md:p-8 flex flex-col items-center relative z-10">
+            
+            <!-- 1. Title: Canoe & Cuisine -->
+            <div class="mb-6 text-center">
+                <div class="flex items-center justify-center gap-2 text-brand-red mb-1">
+                    <i data-lucide="utensils-crossed" class="w-8 h-8"></i>
+                </div>
+                <h1 class="font-logo text-4xl text-brand-red">
+                    Canoe <span class="text-brand-yellow text-3xl">&</span> Cuisine
+                </h1>
+                <p class="text-gray-400 text-[10px] tracking-widest mt-1 uppercase">College Dining Experience</p>
+            </div>
+
+            <!-- 2. Wavy/Sketchy "Status" Header -->
+            <div class="sketch-border bg-white px-8 py-2 mb-8 cursor-default">
+                <h2 id="page-status" class="text-lg font-bold text-gray-800 tracking-wide">Welcome</h2>
+            </div>
+
+            <!-- VIEW 1: SELECTION STATE -->
+            <div id="selection-view" class="view-section view-active w-full space-y-4">
+                <button onclick="showView('login', 'user')" class="w-full group bg-brand-red hover:bg-red-700 text-white p-4 rounded-xl shadow-lg transform transition hover:-translate-y-1 flex items-center justify-between">
+                    <span class="font-semibold text-lg">User Login</span>
+                    <div class="bg-white/20 p-2 rounded-full group-hover:bg-white/30">
+                        <i data-lucide="user" class="w-5 h-5"></i>
+                    </div>
+                </button>
+
+                <button onclick="showView('login', 'admin')" class="w-full group bg-brand-yellow hover:bg-yellow-400 text-red-900 p-4 rounded-xl shadow-lg transform transition hover:-translate-y-1 flex items-center justify-between">
+                    <span class="font-semibold text-lg">Admin Login</span>
+                    <div class="bg-red-900/10 p-2 rounded-full group-hover:bg-red-900/20">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    </div>
+                </button>
+            </div>
+
+            <!-- VIEW 2: LOGIN FORM -->
+            <div id="login-view" class="view-section w-full">
+                <div class="flex items-center mb-6">
+                    <button onclick="showView('selection')" class="text-gray-400 hover:text-brand-red transition">
+                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                    </button>
+                    <h3 id="login-title" class="ml-4 text-xl font-bold text-gray-800">Login</h3>
+                </div>
+
+                <!-- Error Message Display -->
+                <div id="error-message" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    <span id="error-text"></span>
+                </div>
+
+                <form class="space-y-4" onsubmit="event.preventDefault(); handleLogin();">
+                    <div>
+                        <label id="login-input-label" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input id="login-email" type="email" required class="w-full px-4 py-3 rounded-lg bg-brand-cream border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 outline-none transition" placeholder="Enter your email">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input id="login-password" type="password" required class="w-full px-4 py-3 rounded-lg bg-brand-cream border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 outline-none transition" placeholder="••••••••">
+                    </div>
+
+                    <button type="submit" class="w-full bg-brand-red text-white font-bold py-3 rounded-lg shadow-md hover:bg-red-700 transition">
+                        Sign In
+                    </button>
+                </form>
+            </div>
+
+            <!-- VIEW 3: REGISTER FORM -->
+            <div id="register-view" class="view-section w-full overflow-y-auto max-h-[60vh] px-2 custom-scroll">
+                <div class="flex items-center mb-4 sticky top-0 bg-white py-2 z-20">
+                    <button onclick="showView('selection')" class="text-gray-400 hover:text-brand-red transition">
+                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                    </button>
+                    <h3 class="ml-4 text-xl font-bold text-brand-red">Create Account</h3>
+                </div>
+
+                <form class="space-y-3 pb-4" onsubmit="event.preventDefault(); handleAction('Registering...');">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase">Full Name</label>
+                        <input type="text" required class="w-full px-4 py-2 rounded-lg bg-brand-cream border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/10 outline-none transition" placeholder="Enter Name">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase">Roll Number</label>
+                            <input type="text" required class="w-full px-4 py-2 rounded-lg bg-brand-cream border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/10 outline-none transition" placeholder="24PA1A...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase">Branch</label>
+                            <select class="w-full px-4 py-2 rounded-lg bg-brand-cream border border-gray-200 focus:border-brand-red outline-none transition">
+                                <option>CSE</option>
+                                <option>IT</option>
+                                <option>ECE</option>
+                                <option>EEE</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase">Vishnu Email ID</label>
+                        <input type="email" required class="w-full px-4 py-2 rounded-lg bg-brand-cream border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/10 outline-none transition" placeholder="24pa1a05d7@vishnu.edu.in">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase">Year</label>
+                            <select class="w-full px-4 py-2 rounded-lg bg-brand-cream border border-gray-200 focus:border-brand-red outline-none transition">
+                                <option>1st Year</option>
+                                <option>2nd Year</option>
+                                <option>3rd Year</option>
+                                <option>4th Year</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase">Mobile Number</label>
+                            <input type="tel" required class="w-full px-4 py-2 rounded-lg bg-brand-cream border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/10 outline-none transition" placeholder="9876543210">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1 uppercase">Password</label>
+                        <input type="password" required class="w-full px-4 py-2 rounded-lg bg-brand-cream border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/10 outline-none transition" placeholder="••••••••">
+                    </div>
+
+                    <button type="submit" class="w-full bg-brand-red text-white font-bold py-3 rounded-lg shadow-md hover:bg-red-700 transition mt-2">
+                        Complete Registration
+                    </button>
+                </form>
+            </div>
+
+            <!-- FOOTER: TOGGLE LINKS -->
+            <div id="footer-area" class="w-full mt-6 flex justify-between items-center text-sm">
+                <span id="footer-text" class="text-gray-500 italic">New here?</span>
+                <button id="footer-btn" onclick="showView('register')" class="text-brand-red font-bold hover:text-brand-yellow transition flex items-center gap-1 group">
+                    Register
+                    <i data-lucide="arrow-right" class="w-4 h-4 transform group-hover:translate-x-1 transition"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        const views = {
+            selection: document.getElementById('selection-view'),
+            login: document.getElementById('login-view'),
+            register: document.getElementById('register-view')
+        };
+        const statusLabel = document.getElementById('page-status');
+        const loginTitle = document.getElementById('login-title');
+        const footerBtn = document.getElementById('footer-btn');
+        const footerText = document.getElementById('footer-text');
+        
+        // Track login type (user or admin)
+        let currentLoginType = 'user';
+        
+        // Admin credentials
+        const ADMIN_EMAIL = 'saigandhi@gmail.com';
+        const ADMIN_PASSWORD = '1234@gana';
+
+        function showView(viewName, type = 'user') {
+            // Hide all views
+            Object.values(views).forEach(v => v.classList.remove('view-active'));
+            
+            // Hide error message when switching views
+            document.getElementById('error-message').classList.add('hidden');
+            
+            // Set header text and footer visibility
+            if (viewName === 'selection') {
+                statusLabel.textContent = "Welcome";
+                footerBtn.style.display = "flex";
+                footerText.textContent = "New here?";
+                footerBtn.onclick = () => showView('register');
+                footerBtn.innerHTML = `Register <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+            } else if (viewName === 'login') {
+                currentLoginType = type; // Store the login type
+                statusLabel.textContent = "Login Page";
+                loginTitle.textContent = type === 'user' ? "User Login" : "Admin Login";
+                loginTitle.className = type === 'user' ? "ml-4 text-xl font-bold text-brand-red" : "ml-4 text-xl font-bold text-yellow-600";
+                
+                // Update placeholder based on login type
+                const emailInput = document.getElementById('login-email');
+                if (type === 'admin') {
+                    emailInput.placeholder = 'saigandhi@gmail.com';
+                } else {
+                    emailInput.placeholder = '24pa1a05d7@vishnu.edu.in';
+                }
+                
+                // Clear form fields
+                emailInput.value = '';
+                document.getElementById('login-password').value = '';
+                
+                footerBtn.style.display = "flex";
+                footerText.textContent = "New here?";
+                footerBtn.onclick = () => showView('register');
+                footerBtn.innerHTML = `Register <i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+            } else if (viewName === 'register') {
+                statusLabel.textContent = "Register";
+                footerText.textContent = "Have an account?";
+                footerBtn.onclick = () => showView('selection');
+                footerBtn.innerHTML = `<i data-lucide="arrow-left" class="w-4 h-4"></i> Login`;
+            }
+
+            // Show target view with animation
+            setTimeout(() => {
+                views[viewName].classList.add('view-active');
+                lucide.createIcons();
+            }, 50);
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+        
+        function hideError() {
+            document.getElementById('error-message').classList.add('hidden');
+        }
+        
+        function handleLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn = event.submitter;
+            const originalText = btn.innerText;
+            
+            // Validate admin login credentials
+            if (currentLoginType === 'admin') {
+                if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+                    showError('Invalid admin email or password. Please try again.');
+                    return;
+                }
+            }
+            
+            hideError();
+            
+            // Show loading state
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto"></i>`;
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                btn.innerText = "Authenticating...";
+                setTimeout(() => {
+                    btn.innerText = "Success!";
+                    btn.classList.add('bg-green-600');
+                    
+                    // Redirect to appropriate page
+                    setTimeout(() => {
+                        if (currentLoginType === 'admin') {
+                            window.location.href = 'admin.html';
+                        } else {
+                            window.location.href = 'home.html';
+                        }
+                    }, 800);
+                }, 1000);
+            }, 800);
+        }
+    </script>
+</body>
+</html>
